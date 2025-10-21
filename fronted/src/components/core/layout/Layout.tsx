@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
 import { Box, Container } from "@mui/material"
-import Header from "@components/Header"
+import Header from "@src/components/core/Header"
 
 interface LayoutProps {
   children: ReactNode

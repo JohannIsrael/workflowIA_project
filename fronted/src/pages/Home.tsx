@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import reactLogo from "@src/assets/react.svg";
 import '@src/App.css'
 import { Button } from '@mui/material'
-import Layout from '@components/layout/Layout'  // importamos el layout
+import Layout from '@src/components/core/layout/Layout'  // importamos el layout
 import type { AxiosResponse } from 'axios';
 import { getHelloAPI } from '@src/apis/public';
 

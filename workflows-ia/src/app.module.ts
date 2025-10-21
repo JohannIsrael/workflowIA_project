@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { expressWinstonLogger } from './config/configLogger';
+import { GeminiModule } from './modules/gemini/gemini.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { expressWinstonLogger } from './config/configLogger';
       envFilePath: '.env',
       isGlobal: true,
     }),
+    GeminiModule,
   ],
   controllers: [AppController],
   providers: [AppService],
