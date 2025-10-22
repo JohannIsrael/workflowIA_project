@@ -1,0 +1,191 @@
+.containerPage{
+    margin: 2rem;
+    max-width: 100%;
+    padding: 2rem;
+}
+
+.generalSection{
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.generalSection > :first-child{
+    width: 20%;
+}
+
+.generalSection > :last-child{
+    width: 80%;
+}
+
+.heroDetailProject{
+    color: black;
+    font-weight: 900;
+    font-size: xx-large;
+}
+
+.headerSection{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.taskHeaderSection{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 1rem;
+}
+
+.headerSection__buttons{
+    display: flex;
+    gap: 1rem;
+}
+
+.tasksSection{
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.ProjectInfoSection{
+    background-color: #ffffff;
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.editableLabels{
+    margin-left: 1rem;
+}
+
+.heroProjectInfoSection{
+    color: black;
+    padding-left: 1rem;
+}
+
+.addTaskButton{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: -moz-fit-content;
+    width: fit-content;
+    color:#027de2;
+    background-color: #d0e5fb;
+    font-weight: bolder;
+    border-radius: .5rem;
+    border: solid 0px;
+    border-color: #dce1e7;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    font-size: large;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1);
+}
+
+
+.addTaskButton:hover{
+    background-color: #b8d6f9;
+    color: #1e7ad8;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.predictTaskButton{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: -moz-fit-content;
+    width: fit-content;
+    background-color:#027de2;
+    color: #e6ecf3;
+    font-weight: bolder;
+    border-radius: .5rem;
+    border: solid 0px;
+    border-color: #e6ecf3;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    cursor: pointer;
+    font-size: large;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1);
+}
+
+.predictTaskButton:hover{
+    color: #e6ecf3;
+    background-color: #1e7ad8;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.iconAdd{
+    margin-right: 0.5rem;
+}
+
+.heroTasksSection{
+    color: black;
+    padding-left: 1rem;
+}
+
+.taskCard{
+    background-color: #f9fafb;
+    color: black;
+    border-radius: .5rem;
+    border: solid 1px;
+    border-color: #dce1e7;
+    padding-left: 1rem;
+    margin: 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.taskCard__icons{
+    margin: 1rem;
+}
+
+.heroTaskCard{
+    margin-top: 0.25rem;  
+    margin-bottom: 0.05rem; 
+    line-height: 1.2;
+    font-size: x-large;
+}
+
+.idTaskCard{
+    margin-top: 0;  
+    margin-bottom: 0.25rem; 
+    line-height: 1.2;
+    font-size: medium;
+    font-weight: normal;
+    color: gray;
+}
+
+.descriptionTaskCard{
+    margin-top: 0.5rem;  
+    margin-bottom: 0.25rem; 
+    line-height: 1.2;
+    font-size: medium;
+    font-weight: normal;
+    color: #313741;
+}
+
+.assignedTaskCard{
+    margin-top: 1rem;  
+    margin-bottom: 0.25rem; 
+    line-height: 1.2;
+    font-size: medium;
+    font-weight: normal;
+}
+
+.sprintTaskCard{
+    margin-top: 0;  
+    margin-bottom: 0.25rem; 
+    line-height: 1.2;
+    font-size: medium;
+    font-weight: normal;
+}
