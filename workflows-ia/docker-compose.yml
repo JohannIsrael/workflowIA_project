@@ -1,0 +1,39 @@
+
+services: 
+  db:
+    image: postgres:15
+    container_name: db-workflows-ia
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - db-workflows-ia:/var/lib/postgresql/data
+    networks:
+      - workflows-ia-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-workflows
+    restart: always
+    ports:
+      - "3000:80" 
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+    networks:
+      - workflows-ia-network
+
+volumes:
+  db-workflows-ia:
+
+networks:
+  workflows-ia-network:
+    driver: bridge
