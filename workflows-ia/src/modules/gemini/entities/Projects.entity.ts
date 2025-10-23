@@ -2,8 +2,10 @@
 import { 
     Column, 
     Entity, 
+    OneToMany, 
     PrimaryGeneratedColumn 
 } from "typeorm";
+import { Tasks } from "./Tasks.entity";
 
 @Entity("projects")
 export class Projects {
@@ -19,8 +21,8 @@ export class Projects {
     @Column("character varying", { name: 'backtech', nullable: true, length: 255 })
     backtech: string | null;
 
-    @Column("character varying", { name: 'status', length: 255 })
-    status: string;
+    @Column("character varying", { name: 'fronttech', nullable: true,length: 255 })
+    fronttech: string;
 
     @Column("character varying", { name: 'cloudTech', nullable: true, length: 255 })
     cloudTech: string | null;
@@ -30,5 +32,8 @@ export class Projects {
 
     @Column("character varying", { name: 'endDate', nullable: true, length: 255 })
     endDate: string | null;
+
+    @OneToMany(() => Tasks, (task) => task.project, { cascade: true })
+    tasks: Tasks[];
 
 }
