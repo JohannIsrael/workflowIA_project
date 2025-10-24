@@ -1,0 +1,125 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AuthService } from '../auth.service';
+import { AuditLogs } from '../entities/AuditLogs.entity';
+import { User } from '../../user/entities/user.entity';
+
+@Injectable()
+export class AuthServiceProxy {
+  constructor(
+    private readonly authService: AuthService,
+    @InjectRepository(AuditLogs)
+    private auditLogsRepository: Repository<AuditLogs>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+  ) {}
+
+  async validateUser(user: any): Promise<any> {
+    const startTime = Date.now();
+    let userFound: User | null = null;
+    
+    try {
+      // Buscar el usuario para obtener su ID para el audit log
+      userFound = await this.userRepository.findOne({ where: { email: user.email } });
+      
+      const result = await this.authService.validateUser(user);
+      const duration = Date.now() - startTime;
+      
+      if (result) {
+        // Login exitoso
+        await this.createAuditLog({
+          action: 'LOGIN_SUCCESS',
+          description: `Login successful for user: ${user.email}`,
+          details: `Duration: ${duration}ms, User ID: ${result.user?.id}`,
+          user: userFound,
+        });
+      } else {
+        // Login fallido
+        await this.createAuditLog({
+          action: 'LOGIN_FAILED',
+          description: `Login failed for user: ${user.email}`,
+          details: `Duration: ${duration}ms, Reason: Invalid credentials`,
+          user: userFound,
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      // Error en login
+      await this.createAuditLog({
+        action: 'LOGIN_ERROR',
+        description: `Login error for user: ${user.email}`,
+        details: `Duration: ${duration}ms, Error: ${error.message}`,
+        user: userFound,
+      });
+      
+      throw error;
+    }
+  }
+
+  async refreshTokens(refreshToken: string): Promise<any> {
+    const startTime = Date.now();
+    
+    try {
+      const result = await this.authService.refreshTokens(refreshToken);
+      const duration = Date.now() - startTime;
+      
+      if (result) {
+        // Token refresh exitoso
+        await this.createAuditLog({
+          action: 'TOKEN_REFRESH_SUCCESS',
+          description: 'Token refresh successful',
+          details: `Duration: ${duration}ms`,
+          user: null,
+        });
+      } else {
+        // Token refresh fallido
+        await this.createAuditLog({
+          action: 'TOKEN_REFRESH_FAILED',
+          description: 'Token refresh failed',
+          details: `Duration: ${duration}ms, Reason: Invalid refresh token`,
+          user: null,
+        });
+      }
+      
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      
+      // Error en token refresh
+      await this.createAuditLog({
+        action: 'TOKEN_REFRESH_ERROR',
+        description: 'Token refresh error',
+        details: `Duration: ${duration}ms, Error: ${error.message}`,
+        user: null,
+      });
+      
+      throw error;
+    }
+  }
+
+  private async createAuditLog(data: {
+    action: string;
+    description: string;
+    details: string;
+    user: User | null;
+  }): Promise<void> {
+    try {
+      const auditLog = this.auditLogsRepository.create({
+        action: data.action,
+        description: data.description,
+        details: data.details,
+        createdAt: new Date().toISOString(),
+        user: data.user || undefined,
+      });
+      
+      await this.auditLogsRepository.save(auditLog);
+    } catch (error) {
+      // No lanzamos error para no interrumpir el flujo principal
+      console.error('Error creating audit log:', error);
+    }
+  }
+}

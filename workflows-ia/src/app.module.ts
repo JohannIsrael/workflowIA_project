@@ -6,6 +6,7 @@ import { expressWinstonLogger } from './config/configLogger';
 import { GeminiModule } from './modules/gemini/gemini.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { UserModule } from './modules/user/user.module';
     }),
     GeminiModule,
     UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
