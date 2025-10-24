@@ -1,28 +1,38 @@
 import type { ReactNode } from "react"
 import { useState } from "react"
 import { Box, Container, Typography, Drawer, List, ListItem, ListItemText, ListItemIcon, IconButton } from "@mui/material"
-import { Dashboard, Folder, Settings, ChevronLeft, ChevronRight } from "@mui/icons-material"
+import { Folder, Settings, ChevronLeft, ChevronRight, Assignment, Psychology } from "@mui/icons-material"
+import { useNavigate, useLocation } from "react-router-dom"
 import Header from "@src/components/core/Header"
+import ImgLogo from '@src/assets/logo.svg'
 
 interface SidebarLayoutProps {
   children: ReactNode
   center?: boolean
+  title?: string
 }
 
 const drawerWidth = 240
 const collapsedWidth = 60
 
-export default function SidebarLayout({ children, center = false }: SidebarLayoutProps) {
+export default function SidebarLayout({ children, center = false, title }: SidebarLayoutProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
   
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard /> },
-    { text: 'Proyectos', icon: <Folder /> },
-    { text: 'Configuración', icon: <Settings /> },
+    { text: 'Consola IA', icon: <Psychology />, path: '/' },
+    { text: 'Proyectos', icon: <Folder />, path: '/proyectos' },
+    { text: 'Logs', icon: <Assignment />, path: '/logs' },
+    { text: 'Configuración', icon: <Settings />, path: '/configuracion' },
   ]
 
   const toggleCollapse = () => {
     setCollapsed(!collapsed)
+  }
+
+  const handleNavigation = (path: string) => {
+    navigate(path)
   }
 
   return (
@@ -56,9 +66,17 @@ export default function SidebarLayout({ children, center = false }: SidebarLayou
           justifyContent: collapsed ? 'center' : 'space-between'
         }}>
           {!collapsed && (
-            <Typography variant="h6" component="div">
-              FlowPilot
-            </Typography>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <img src={ImgLogo} alt="Logo" style={{ width: '20px', height: 'auto' }} />
+              <Typography
+                component="h4"
+                variant="h4"
+                align="center"
+                sx={{ fontSize: '20px', fontWeight: 'bold' }}
+              ></Typography>
+                FlowPilot
+            </Box>
           )}
           <IconButton onClick={toggleCollapse} size="small">
             {collapsed ? <ChevronRight /> : <ChevronLeft />}
@@ -69,20 +87,32 @@ export default function SidebarLayout({ children, center = false }: SidebarLayou
           {menuItems.map((item) => (
             <ListItem 
               key={item.text} 
-              button
+              onClick={() => handleNavigation(item.path)}
               sx={{
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 px: collapsed ? 1 : 2,
+                backgroundColor: location.pathname === item.path ? 'rgba(25, 118, 210, 0.1)' : 'transparent',
+                cursor: 'pointer',
+                '&:hover': {
+                  backgroundColor: 'rgba(25, 118, 210, 0.05)',
+                },
               }}
             >
               <ListItemIcon sx={{ 
                 minWidth: collapsed ? 'auto' : 40,
-                justifyContent: 'center'
+                justifyContent: 'center',
+                color: location.pathname === item.path ? '#1976d2' : 'inherit'
               }}>
                 {item.icon}
               </ListItemIcon>
               {!collapsed && (
-                <ListItemText primary={item.text} />
+                <ListItemText 
+                  primary={item.text} 
+                  sx={{ 
+                    color: location.pathname === item.path ? '#1976d2' : 'inherit',
+                    fontWeight: location.pathname === item.path ? 'bold' : 'normal'
+                  }}
+                />
               )}
             </ListItem>
           ))}
@@ -96,7 +126,7 @@ export default function SidebarLayout({ children, center = false }: SidebarLayou
           flex: 1,
         }}>
           {/* Navbar dentro del contenido */}
-          <Header />
+          <Header title={title} />
           
           <Container 
           maxWidth="lg" 

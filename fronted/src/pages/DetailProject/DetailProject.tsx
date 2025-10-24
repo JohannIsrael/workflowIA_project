@@ -1,6 +1,7 @@
-import React from 'react'
 import './DetailProject.css'
+import { useState } from 'react';
 import TaskCard, { type Task } from '@src/components/detailProject/TaskCard'
+import CreateTaskModal from '@src/components/CreateTaskModal'
 import { AddCircleOutline, Speed, AutoAwesome, SaveAlt, CalendarMonth } from '@mui/icons-material';
 import { Box, FormControl, InputLabel, Select, MenuItem, TextField, InputAdornment } from '@mui/material';
 
@@ -24,8 +25,25 @@ const tasks: Task[] = [
 
 
 export default function DetailProject() {
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const handleOpenTaskModal = () => {
+    setEditingTask(null);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setEditingTask(null);
+  };
   return (
-    <div className="containerPage">
+    <div>
       <div className='headerSection'>
             <h1 className="heroDetailProject">FlowPilot App</h1>
             <div className='headerSection__buttons'>
@@ -84,18 +102,33 @@ export default function DetailProject() {
           <section className="tasksSection">
             <div className='taskHeaderSection'>
               <h2 className="heroTasksSection">Tareas</h2>
-              <button className='addTaskButton'>
+              <button className='addTaskButton' onClick={handleOpenTaskModal}>
                 <AddCircleOutline className='iconAdd'/>
                 Agregar Tarea
-                </button>
+              </button>
             </div>
 
             {tasks.map((task) => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
             ))}
           </section>
         </div>
       </div>
+
+      <CreateTaskModal 
+        open={isTaskModalOpen} 
+        onClose={handleCloseTaskModal}
+        editMode={!!editingTask}
+        taskData={editingTask ? {
+          id: editingTask.id,
+          name: editingTask.name,
+          description: editingTask.description,
+          assignedTo: editingTask.assignedTo,
+          sprint: editingTask.sprint,
+          priority: 'Medium',
+          dueDate: ''
+        } : undefined}
+      />
     </div>
   );
 }

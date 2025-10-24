@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { useLocation } from "react-router-dom"
 import Layout from "@src/components/core/layout/Layout"
 import SidebarLayout from "@src/components/core/layout/SidebarLayout"
+import SimpleLayout from "@src/components/core/layout/SimpleLayout"
 
 interface ConditionalLayoutProps {
   children: ReactNode
@@ -10,14 +11,42 @@ interface ConditionalLayoutProps {
 export default function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const location = useLocation()
   
-  // Páginas que NO deben tener sidebar
-  const noSidebarPages = ['/login']
+  // Páginas que NO deben tener sidebar ni navbar
+  const noLayoutPages = ['/login']
   
-  const shouldShowSidebar = !noSidebarPages.includes(location.pathname)
+  // Páginas que solo tienen navbar (sin sidebar)
+  const navbarOnlyPages = ['/register', '/forgot-password'] // ejemplos para futuro
   
-  if (shouldShowSidebar) {
-    return <SidebarLayout>{children}</SidebarLayout>
+  // Determinar el título basado en la ruta
+  const getPageTitle = (pathname: string) => {
+    switch (pathname) {
+      case '/dashboard':
+        return 'Consola IA'
+      case '/proyectos':
+        return 'Proyectos'
+      case '/logs':
+        return 'Logs del Sistema'
+      case '/profile':
+        return 'Mi Perfil'
+      case '/configuracion':
+        return 'Configuración'
+      case '/':
+        return 'Detalle del Proyecto'
+      default:
+        return undefined
+    }
   }
   
-  return <Layout>{children}</Layout>
+  const pageTitle = getPageTitle(location.pathname)
+  
+  if (noLayoutPages.includes(location.pathname)) {
+    return <SimpleLayout>{children}</SimpleLayout>
+  }
+  
+  if (navbarOnlyPages.includes(location.pathname)) {
+    return <Layout title={pageTitle}>{children}</Layout>
+  }
+  
+  // Páginas con sidebar y navbar
+  return <SidebarLayout title={pageTitle}>{children}</SidebarLayout>
 }

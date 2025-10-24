@@ -5,12 +5,13 @@ import Header from "@src/components/core/Header"
 interface LayoutProps {
   children: ReactNode
   center?: boolean
+  title?: string
 }
 
-export default function Layout({ children, center = false }: LayoutProps) {
+export default function Layout({ children, center = false, title }: LayoutProps) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header/>
+      <Header title={title}/>
       <Container 
         maxWidth="lg" 
         sx={{ 

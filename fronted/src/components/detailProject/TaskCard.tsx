@@ -12,9 +12,16 @@ export type Task = {
 
 type Props = {
   task: Task;
+  onEdit?: (task: Task) => void;
 };
 
-export default function TaskCard({ task }: Props) {
+export default function TaskCard({ task, onEdit }: Props) {
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(task);
+    }
+  };
+
   return (
     <div className="taskCard" aria-labelledby={`task-${task.id}-title`}>
         <div>
@@ -25,7 +32,7 @@ export default function TaskCard({ task }: Props) {
             <p className='sprintTaskCard'><strong>Sprint:</strong> {task.sprint}</p>
         </div>
         <div className="taskCard__icons">
-            <IconButton aria-label="edit">
+            <IconButton aria-label="edit" onClick={handleEdit}>
                 <Edit />
             </IconButton>
             <IconButton aria-label="delete">

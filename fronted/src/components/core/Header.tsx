@@ -9,9 +9,16 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useNavigate } from 'react-router-dom';
 
-export default function Header() {
+interface HeaderProps {
+  title?: string;
+}
+
+export default function Header({ title }: HeaderProps) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
 
   const isMenuOpen = Boolean(anchorEl);
 
@@ -21,6 +28,15 @@ export default function Header() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    navigate('/login');
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+    handleMenuClose();
   };
 
   const menuId = 'primary-search-account-menu';
@@ -40,8 +56,7 @@ export default function Header() {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleProfileClick}>Mi perfil</MenuItem>
     </Menu>
   );
 
@@ -56,18 +71,12 @@ export default function Header() {
         }}
       >
         <Toolbar>
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ 
-              display: { xs: 'none', sm: 'block' },
-              color: 'black'
-            }}
-          >
-            FlowPilot App
-          </Typography>
-          <Box sx={{ flexGrow: 1 }} />
+          {title && (
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+              {title}
+            </Typography>
+          )}
+          {!title && <Box sx={{ flexGrow: 1 }} />}
           <Box sx={{ display: 'flex' }}>
             <IconButton
               size="large"
@@ -88,6 +97,14 @@ export default function Header() {
               sx={{ color: 'black' }}
             >
               <AccountCircle />
+            </IconButton>
+            <IconButton
+              size="large"
+              aria-label="logout"
+              onClick={handleLogout}
+              sx={{ color: 'black', ml: 1 }}
+            >
+              <LogoutIcon />
             </IconButton>
           </Box>
         </Toolbar>
