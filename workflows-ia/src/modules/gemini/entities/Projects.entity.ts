@@ -22,7 +22,7 @@ export class Projects {
     backtech: string | null;
 
     @Column("character varying", { name: 'fronttech', nullable: true,length: 255 })
-    fronttech: string;
+    fronttech: string | null;
 
     @Column("character varying", { name: 'cloudTech', nullable: true, length: 255 })
     cloudTech: string | null;

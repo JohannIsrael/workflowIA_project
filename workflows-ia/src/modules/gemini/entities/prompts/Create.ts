@@ -17,7 +17,7 @@ export const WORKFLOW_CREATE_PROMPT =
     {
       "id": 1,
       "name": "",
-      "decription": "",
+      "description": "",
       "assignedTo": "",
       "sprint": 1
     }
