@@ -7,19 +7,44 @@ import Logs from "@src/pages/Logs/Logs"
 import Profile from "@src/pages/Profile/Profile"
 import Configuracion from "@src/pages/Configuracion/Configuracion"
 import ConditionalLayout from "@src/components/core/layout/ConditionalLayout"
+import ProtectedRoute from "@src/components/ProtectedRoute"
 
 function App() {
   return (
     <BrowserRouter>
       <ConditionalLayout>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/detalle-proyecto" element={<DetailProject />} />
-          <Route path="/proyectos" element={<Proyectos />} />
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/configuracion" element={<Configuracion />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/detalle-proyecto" element={
+            <ProtectedRoute>
+              <DetailProject />
+            </ProtectedRoute>
+          } />
+          <Route path="/proyectos" element={
+            <ProtectedRoute>
+              <Proyectos />
+            </ProtectedRoute>
+          } />
+          <Route path="/logs" element={
+            <ProtectedRoute>
+              <Logs />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/configuracion" element={
+            <ProtectedRoute>
+              <Configuracion />
+            </ProtectedRoute>
+          } />
         </Routes>
       </ConditionalLayout>
     </BrowserRouter>

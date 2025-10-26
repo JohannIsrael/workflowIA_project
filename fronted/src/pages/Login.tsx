@@ -11,7 +11,8 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ImgLogo from '@src/assets/logo.svg'
 import CustomTextField from '@src/components/CustomTextField';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import api from '@src/apis/interceptor';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -57,27 +58,52 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [loginError, setLoginError] = React.useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    // Validación comentada temporalmente
-    // if (emailError || passwordError) {
-    //   return;
-    // }
+    if (!validateInputs()) {
+      return;
+    }
+    
+    setIsLoading(true);
+    setLoginError('');
     
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const loginData = {
+      email: data.get('email') as string,
+      password: data.get('password') as string,
+    };
     
-    // Redirigir a la página principal
-    navigate('/');
+    try {
+      const response = await api.post('/auth/login', loginData);
+      const { accessToken, refreshToken, user } = response.data;
+      
+      // Guardar tokens en localStorage
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      // Redirigir a la página original o al dashboard
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      setLoginError(
+        error.response?.data?.message || 
+        'Error al iniciar sesión. Verifica tus credenciales.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const validateInputs = () => {
@@ -182,14 +208,22 @@ export default function SignIn() {
                 />
               </FormControl>
 
+              {/* Mensaje de error */}
+              {loginError && (
+                <Typography color="error" variant="body2" sx={{ textAlign: 'center' }}>
+                  {loginError}
+                </Typography>
+              )}
+
               {/* Inicio del botón de inicio de sesión */}
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 onClick={validateInputs}
+                disabled={isLoading}
               >
-                Ingresar
+                {isLoading ? 'Iniciando sesión...' : 'Ingresar'}
               </Button>
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

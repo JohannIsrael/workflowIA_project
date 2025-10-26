@@ -4,9 +4,11 @@ import { Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AuditLogs } from '../entities/AuditLogs.entity';
 import { User } from '../../user/entities/user.entity';
+import { LoginDto } from '../dto/login-dto';
+import { IAuditLogsOperations} from '../interfaces/AuditLogs';
 
 @Injectable()
-export class AuthServiceProxy {
+export class AuthServiceProxy implements IAuditLogsOperations{
   constructor(
     private readonly authService: AuthService,
     @InjectRepository(AuditLogs)
@@ -15,22 +17,23 @@ export class AuthServiceProxy {
     private userRepository: Repository<User>,
   ) {}
 
-  async validateUser(user: any): Promise<any> {
+  async validateUser(dto: LoginDto): Promise<any> {
+
     const startTime = Date.now();
     let userFound: User | null = null;
     
     try {
       // Buscar el usuario para obtener su ID para el audit log
-      userFound = await this.userRepository.findOne({ where: { email: user.email } });
+      userFound = await this.userRepository.findOne({ where: { email: dto.email } });
       
-      const result = await this.authService.validateUser(user);
+      const result = await this.authService.validateUser(dto);
       const duration = Date.now() - startTime;
       
       if (result) {
         // Login exitoso
         await this.createAuditLog({
           action: 'LOGIN_SUCCESS',
-          description: `Login successful for user: ${user.email}`,
+          description: `Login successful for user: ${dto.email}`,
           details: `Duration: ${duration}ms, User ID: ${result.user?.id}`,
           user: userFound,
         });
@@ -38,7 +41,7 @@ export class AuthServiceProxy {
         // Login fallido
         await this.createAuditLog({
           action: 'LOGIN_FAILED',
-          description: `Login failed for user: ${user.email}`,
+          description: `Login failed for user: ${dto.email}`,
           details: `Duration: ${duration}ms, Reason: Invalid credentials`,
           user: userFound,
         });
@@ -48,13 +51,16 @@ export class AuthServiceProxy {
     } catch (error) {
       const duration = Date.now() - startTime;
       
-      // Error en login
-      await this.createAuditLog({
-        action: 'LOGIN_ERROR',
-        description: `Login error for user: ${user.email}`,
-        details: `Duration: ${duration}ms, Error: ${error.message}`,
-        user: userFound,
-      });
+      if (userFound) {
+        // Error en login
+        await this.createAuditLog({
+          action: 'LOGIN_ERROR',
+          description: `Login error for user: ${dto.email}`,
+          details: `Duration: ${duration}ms, Error: ${error.message}`,
+          user: userFound,
+        });
+      }
+      
       
       throw error;
     }
@@ -122,4 +128,25 @@ export class AuthServiceProxy {
       console.error('Error creating audit log:', error);
     }
   }
+
+  async getAllAuditLogs(page: number, limit: number) {
+    return await this.auditLogsRepository.find({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+  }
+
+  // Funciones logger
+  async logAction(data: AuditLogs): Promise<void> {
+    await this.auditLogsRepository.save(data);
+  }
+
+  async findAuditLog(id: string): Promise<AuditLogs> {
+    const auditLog = await this.auditLogsRepository.findOne({ where: { id } });
+    if (!auditLog) {
+      throw new Error(`Audit log with id ${id} not found`);
+    }
+    return auditLog;
+  }
+
 }

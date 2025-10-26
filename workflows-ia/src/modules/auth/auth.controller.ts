@@ -1,12 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UnauthorizedException, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UnauthorizedException, Req, Query } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthServiceProxy } from './proxies/auth-service.proxy';
 import { LoginDto } from './dto/login-dto';
+import { Public } from './decorators/public.decorators';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authServiceProxy: AuthServiceProxy) {}
+  constructor(
+    private readonly authServiceProxy: AuthServiceProxy,
+    private readonly authService: AuthService
+  ) {}
 
+  @Public()
   @Post('login')
   async login(@Body() data: LoginDto) {
     const result = await this.authServiceProxy.validateUser(data);
@@ -35,5 +41,10 @@ export class AuthController {
     }
     
     return result;
+  }
+  
+  @Get('audit-logs')
+  async getAuditLogs(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
+    return this.authServiceProxy.getAllAuditLogs(page, limit);
   }
 }

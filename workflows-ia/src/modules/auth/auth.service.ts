@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import * as crypto from 'crypto';
 import * as jwt from 'jsonwebtoken';
+import { AuditLogs } from './entities/AuditLogs.entity';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +17,8 @@ export class AuthService {
     private configService: ConfigService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(AuditLogs)
+    private auditLogsRepository: Repository<AuditLogs>,
   ) {}
 
   async validateUser(user: LoginDto): Promise<any> {
@@ -60,17 +63,9 @@ export class AuthService {
       return null;
     }
 
-    // En un caso real, aquí validarías el refresh token contra una base de datos
-    // Por ahora, simulamos que el refresh token es válido y obtenemos un usuario
-    // En producción deberías:
-    // 1. Decodificar el refresh token para obtener el user ID
-    // 2. Buscar el usuario en la base de datos
-    // 3. Verificar que el refresh token no esté revocado
     
-    // Por simplicidad, buscamos un usuario existente
-    // En producción usarías el ID del refresh token decodificado
     const userFound = await this.userRepository.findOne({ 
-      where: { email: 'user@example.com' } // En producción: where: { id: userIdFromRefreshToken }
+      where: { email: 'user@example.com' } 
     });
 
     if (!userFound) {
@@ -97,6 +92,7 @@ export class AuthService {
     };
   }
 
+  // Funciones auxiliares
   private generateAccessToken(payload: any): string {
     const accessTokenSecret = this.configService.get<string>('JWT_ACCESS_SECRET');
     if (!accessTokenSecret) {
@@ -114,4 +110,6 @@ export class AuthService {
     
     return jwt.sign(payload, refreshTokenSecret, { expiresIn: '7d' });
   }
+
 }
+ 
