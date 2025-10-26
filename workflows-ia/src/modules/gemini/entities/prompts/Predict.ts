@@ -1,5 +1,6 @@
 export const WORKFLOW_PREDICT_PROMPT = 
 `You are an expert software project planner. Your task is to analyze an EXISTING project and predict NEW tasks that should be added, along with optional updates to project metadata.
+Today is ${new Date().toLocaleDateString()}.
 
 ⚠️ CRITICAL CONTEXT:
 - You will receive the CURRENT PROJECT DATA including all existing tasks

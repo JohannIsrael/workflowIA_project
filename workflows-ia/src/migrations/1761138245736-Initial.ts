@@ -22,3 +22,7 @@ export class AddTokenToUser1761138245736 implements MigrationInterface {
     }
 
 }
+
+
+
+// Actualizar respecto a tablas reales para migración

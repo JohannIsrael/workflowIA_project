@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -9,14 +9,15 @@ import {
   Tabs,
   Tab,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  InputAdornment
+  InputAdornment,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
-import { CalendarMonth, Person, Assignment, Speed } from '@mui/icons-material';
+import { Person, Speed } from '@mui/icons-material';
 import CustomButton from '@src/components/CustomButton';
+import { createTaskAPI, updateTaskAPI } from '@src/apis/tasks';
+import { useParams } from 'react-router-dom';
+import { type CreateTaskModalProps } from '@src/utils/interfaces/CreateTaskModalProps';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,32 +45,35 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-interface CreateTaskModalProps {
-  open: boolean;
-  onClose: () => void;
-  editMode?: boolean;
-  taskData?: {
-    id?: number;
-    name: string;
-    description: string;
-    assignedTo: string;
-    sprint: number;
-    priority: string;
-    dueDate: string;
-  };
-}
-
-export default function CreateTaskModal({ open, onClose, editMode = false, taskData }: CreateTaskModalProps) {
+export default function CreateTaskModal({ 
+  open, 
+  onClose, 
+  onTaskCreated,
+  editMode = false, 
+  taskData 
+}: CreateTaskModalProps) {
   const [tabValue, setTabValue] = useState(0);
+  const [isSending, setIsSending] = useState(false);
+  const { projectId } = useParams<{ projectId: string }>();
   const [formData, setFormData] = useState({
-    name: taskData?.name || '',
-    description: taskData?.description || '',
-    assignedTo: taskData?.assignedTo || '',
-    sprint: taskData?.sprint || 1,
-    priority: taskData?.priority || 'Medium',
-    dueDate: taskData?.dueDate || ''
+    name: '',
+    description: '',
+    assignedTo: '',
+    sprint: 1,
   });
   const [aiPrompt, setAiPrompt] = useState('');
+
+  // Actualizar formData cuando taskData cambie
+  useEffect(() => {
+    if (taskData) {
+      setFormData({
+        name: taskData.name || '',
+        description: taskData.description || '',
+        assignedTo: taskData.assignedTo || '',
+        sprint: taskData.sprint || 1,
+      });
+    }
+  }, [taskData]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -82,15 +86,42 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
     }));
   };
 
-  const handleCreateTask = () => {
-    if (tabValue === 0) {
-      // Creación manual
-      console.log(editMode ? 'Editando tarea:' : 'Creando tarea:', formData);
-    } else {
-      // Creación con IA
-      console.log('Creando tarea con IA:', aiPrompt);
+  const handleCreateTask = async () => {
+    if (!projectId) {
+      console.error('No project ID found');
+      return;
     }
-    onClose();
+
+    setIsSending(true);
+    try {
+      if (tabValue === 0) {
+        // Creación/Edición manual
+        const taskPayload = {
+          ...formData,
+          sprint: Number(formData.sprint),
+          projectId: projectId
+        };
+
+        if (editMode && taskData?.id) {
+          // TODO: Implementar updateTaskAPI cuando esté disponible
+          await updateTaskAPI(taskData.id.toString(), taskPayload);
+        } else {
+          await createTaskAPI(taskPayload);
+        }
+        
+        if (onTaskCreated) {
+          onTaskCreated();
+        }
+      } else {
+        // Creación con IA (si se implementa en el futuro)
+        console.log('Creando tarea con IA:', aiPrompt);
+      }
+      handleClose();
+    } catch (error) {
+      console.error('Error creating/updating task:', error);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleClose = () => {
@@ -100,8 +131,6 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
       description: '',
       assignedTo: '',
       sprint: 1,
-      priority: 'Medium',
-      dueDate: ''
     });
     setAiPrompt('');
     setTabValue(0);
@@ -121,12 +150,19 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
         }
       }}
     >
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isSending}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
       <DialogTitle sx={{ pb: 1 }}>
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: '#333' }}>
           {editMode ? 'Editar Tarea' : 'Nueva Tarea'}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {editMode ? 'Modifica los detalles de la tarea' : 'Empieza creando una tarea manualmente o impulsada por IA'}
+          {editMode ? 'Modifica los detalles de la tarea' : 'Crea una nueva tarea para el proyecto'}
         </Typography>
       </DialogTitle>
 
@@ -134,7 +170,7 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabValue} onChange={handleTabChange} aria-label="task creation tabs">
             <Tab label="Creación manual" />
-            <Tab label="Creación impulsada por IA" />
+           {/* <Tab label="Creación impulsada por IA" /> */} 
           </Tabs>
         </Box>
 
@@ -155,20 +191,8 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 variant="outlined"
+                required
               />
-
-              <FormControl fullWidth>
-                <InputLabel>Prioridad</InputLabel>
-                <Select
-                  value={formData.priority}
-                  onChange={(e) => handleInputChange('priority', e.target.value)}
-                  label="Prioridad"
-                >
-                  <MenuItem value="Low">Baja</MenuItem>
-                  <MenuItem value="Medium">Media</MenuItem>
-                  <MenuItem value="High">Alta</MenuItem>
-                </Select>
-              </FormControl>
 
               <TextField
                 fullWidth
@@ -176,6 +200,7 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
                 value={formData.assignedTo}
                 onChange={(e) => handleInputChange('assignedTo', e.target.value)}
                 variant="outlined"
+                placeholder="Ej: Backend Dev, Frontend Dev, etc."
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -198,6 +223,7 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
                       <Speed />
                     </InputAdornment>
                   ),
+                  inputProps: { min: 1 }
                 }}
               />
             </Box>
@@ -206,27 +232,9 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <TextField
                 fullWidth
-                label="Fecha de Vencimiento"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => handleInputChange('dueDate', e.target.value)}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end" style={{ pointerEvents: 'none' }}>
-                      <CalendarMonth />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-
-              <TextField
-                fullWidth
                 label="Descripción de la Tarea"
                 multiline
-                rows={6}
+                rows={8}
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 variant="outlined"
@@ -251,7 +259,7 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
               rows={5}
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
-              placeholder="Ejemplo: Crear una funcionalidad de autenticación de usuarios que incluya registro, login, recuperación de contraseña y validación de email. Debe usar JWT para tokens y tener validación de seguridad..."
+              placeholder="Ejemplo: Crear una funcionalidad de autenticación de usuarios que incluya registro, login, recuperación de contraseña y validación de email..."
               variant="outlined"
               sx={{
                 '& .MuiOutlinedInput-root': {
@@ -274,6 +282,7 @@ export default function CreateTaskModal({ open, onClose, editMode = false, taskD
         <CustomButton
           variant="primary"
           onClick={handleCreateTask}
+          disabled={isSending || !formData.name}
           sx={{ margin: 0 }}
         >
           {tabValue === 0 ? (editMode ? 'Actualizar Tarea' : 'Crear Tarea') : 'Generar con IA'}

@@ -1,6 +1,8 @@
 export const WORKFLOW_CREATE_PROMPT = 
 `You are an expert software project planner. Your task is to analyze general project ideas provided by the user and produce ONLY a valid JSON object that represents a project specification.
 
+Today is ${new Date().toLocaleDateString()}.
+
 ⚠️ Output rules (MANDATORY):
 - Do NOT include explanations, markdown, code fences, or any text outside the JSON.
 - Respond ONLY with a valid JSON object.

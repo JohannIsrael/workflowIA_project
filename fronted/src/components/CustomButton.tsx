@@ -4,6 +4,7 @@ import { Button, type ButtonProps } from '@mui/material';
 interface CustomButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: 'primary' | 'secondary' | 'outlined';
   children: React.ReactNode;
+  component?: React.ElementType;
 }
 
 export default function CustomButton({ 

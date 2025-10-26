@@ -267,7 +267,7 @@ export default function Profile() {
                       12
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Proyectos Completados
+                      Completed Proyects
                     </Typography>
                   </Paper>
                 </Grid>
@@ -278,7 +278,7 @@ export default function Profile() {
                       8
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Proyectos Activos
+                      Active Proyects
                     </Typography>
                   </Paper>
                 </Grid>

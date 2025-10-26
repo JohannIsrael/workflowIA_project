@@ -1,21 +1,30 @@
 import React from 'react';
 import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
+import { getTechColor, getTechTextColor } from './../utils/techColors';
+
 
 interface ProjectCardProps {
-  title: string;
-  priority: 'Low' | 'Medium' | 'High';
+  name: string;
+  priority: string;
   endDate: string;
-  technologies: string[];
+  backtech: string;
+  fronttech: string;
+  cloudTech: string;
+  sprints: number;
 }
 
-export default function ProjectCard({ title, priority, endDate, technologies }: ProjectCardProps) {
+export default function ProjectCard({ name, priority, endDate, backtech, fronttech, cloudTech, sprints}: ProjectCardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'High':
+      case '5':
         return '#ffebee';
-      case 'Medium':
+      case '4':
+        return '#ffebee';
+      case '3':
         return '#fff3e0';
-      case 'Low':
+      case '2':
+        return '#e8f5e8';
+      case '1':
         return '#e8f5e8';
       default:
         return '#f5f5f5';
@@ -24,26 +33,38 @@ export default function ProjectCard({ title, priority, endDate, technologies }: 
 
   const getPriorityTextColor = (priority: string) => {
     switch (priority) {
-      case 'High':
+      case '5':
         return '#d32f2f';
-      case 'Medium':
+      case '4':
+        return '#e76b6bff';
+      case '3':
         return '#f57c00';
-      case 'Low':
+      case '2':
         return '#388e3c';
+      case '1':
+        return '#75b878ff';
       default:
         return '#666';
     }
   };
 
-  const getTechColor = (index: number) => {
-    const colors = ['#e3f2fd', '#e8f5e8', '#fff3e0', '#f3e5f5', '#e0f2f1'];
-    return colors[index % colors.length];
+  const getPriorityText = (priority: string) => {
+    switch (priority) {
+      case '5':
+        return 'Urgente';
+      case '4':
+        return 'Alta';
+      case '3':
+        return 'Media';
+      case '2':
+        return 'Baja';
+      case '1':
+        return 'No urgente';
+      default:
+        return '#666';
+    }
   };
 
-  const getTechTextColor = (index: number) => {
-    const colors = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00695c'];
-    return colors[index % colors.length];
-  };
 
   return (
     <Card 
@@ -70,10 +91,10 @@ export default function ProjectCard({ title, priority, endDate, technologies }: 
               mr: 2
             }}
           >
-            {title}
+            {name}
           </Typography>
           <Chip
-            label={priority}
+            label={getPriorityText(priority)}
             size="small"
             sx={{
               backgroundColor: getPriorityColor(priority),
@@ -95,20 +116,41 @@ export default function ProjectCard({ title, priority, endDate, technologies }: 
         
         <Box sx={{ borderTop: '1px solid #e0e0e0', pt: 2 }}>
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-            {technologies.map((tech, index) => (
-              <Chip
-                key={tech}
-                label={tech}
-                size="small"
-                sx={{
-                  backgroundColor: getTechColor(index),
-                  color: getTechTextColor(index),
-                  fontWeight: '500',
-                  fontSize: '0.75rem',
-                  height: '28px'
-                }}
-              />
-            ))}
+            <Chip
+            label={fronttech}
+            size="small"
+            sx={{
+              backgroundColor: getTechColor(fronttech),
+              color: getTechTextColor(fronttech),
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              height: '24px'
+            }}
+          />
+
+          <Chip
+            label={backtech}
+            size="small"
+            sx={{
+              backgroundColor: getTechColor(backtech),
+              color: getTechTextColor(backtech),
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              height: '24px'
+            }}
+          />
+
+          <Chip
+            label={cloudTech}
+            size="small"
+            sx={{
+              backgroundColor: getTechColor(cloudTech),
+              color: getTechTextColor(cloudTech),
+              fontWeight: 'bold',
+              fontSize: '0.75rem',
+              height: '24px'
+            }}
+          />
           </Box>
         </Box>
       </CardContent>

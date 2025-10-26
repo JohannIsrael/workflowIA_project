@@ -13,10 +13,14 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  InputAdornment
+  InputAdornment,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import { CalendarMonth, Code, Language, Cloud } from '@mui/icons-material';
 import CustomButton from '@src/components/CustomButton';
+import { executeGeminiAction } from '@src/apis/gemini';
+import { createProjectAPI } from '@src/apis/projects';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -47,19 +51,20 @@ function TabPanel(props: TabPanelProps) {
 interface CreateProjectModalProps {
   open: boolean;
   onClose: () => void;
+  onProjectCreated: () => void;
 }
 
-export default function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
+export default function CreateProjectModal({ open, onClose, onProjectCreated }: CreateProjectModalProps) {
   const [tabValue, setTabValue] = useState(0);
+  const [isSending, setIsSending] = useState(false);
   const [formData, setFormData] = useState({
-    projectName: '',
-    priority: 'Medium',
-    frontendTech: '',
-    backendTech: '',
+    name: '',
+    priority: '',
+    fronttech: '',
+    backtech: '',
     cloudTech: '',
     endDate: '',
-    sprints: '',
-    description: ''
+    sprintsQuantity: ''
   });
   const [aiPrompt, setAiPrompt] = useState('');
 
@@ -74,28 +79,39 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
     }));
   };
 
-  const handleCreateProject = () => {
-    if (tabValue === 0) {
-      // Creación manual
-      console.log('Creando proyecto manual:', formData);
-    } else {
-      // Creación con IA
-      console.log('Creando proyecto con IA:', aiPrompt);
+  const handleCreateProject = async () => {
+    setIsSending(true);
+    try {
+      if (tabValue === 0) {
+        // Creación manual
+        const projectData = {
+        ...formData,
+        sprintsQuantity: Number(formData.sprintsQuantity) || 0
+      };
+        await createProjectAPI(projectData);
+      } else {
+        // Creación con IA
+        await executeGeminiAction('create', aiPrompt );
+      }
+      onProjectCreated();
+      handleClose();
+    } catch (error) {
+      console.error('Error creating project:', error);
+    } finally {
+      setIsSending(false);
     }
-    onClose();
   };
 
   const handleClose = () => {
     // Reset form
     setFormData({
-      projectName: '',
+      name: '',
       priority: 'Medium',
-      frontendTech: '',
-      backendTech: '',
+      fronttech: '',
+      backtech: '',
       cloudTech: '',
       endDate: '',
-      sprints: '',
-      description: ''
+      sprintsQuantity: ''
     });
     setAiPrompt('');
     setTabValue(0);
@@ -115,6 +131,12 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
         }
       }}
     >
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isSending}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <DialogTitle sx={{ pb: 1 }}>
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', color: '#333' }}>
           Crea nuevo proyecto
@@ -146,8 +168,8 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
               <TextField
                 fullWidth
                 label="Nombre del Proyecto"
-                value={formData.projectName}
-                onChange={(e) => handleInputChange('projectName', e.target.value)}
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
                 variant="outlined"
               />
 
@@ -158,17 +180,19 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
                   onChange={(e) => handleInputChange('priority', e.target.value)}
                   label="Prioridad"
                 >
-                  <MenuItem value="Low">Baja</MenuItem>
-                  <MenuItem value="Medium">Media</MenuItem>
-                  <MenuItem value="High">Alta</MenuItem>
+                  <MenuItem value="1">No urgente</MenuItem>
+                  <MenuItem value="2">Baja</MenuItem>
+                  <MenuItem value="3">Media</MenuItem>
+                  <MenuItem value="4">Alta</MenuItem>
+                  <MenuItem value="5">Urgente</MenuItem>
                 </Select>
               </FormControl>
 
               <TextField
                 fullWidth
                 label="Tecnologías Frontend"
-                value={formData.frontendTech}
-                onChange={(e) => handleInputChange('frontendTech', e.target.value)}
+                value={formData.fronttech}
+                onChange={(e) => handleInputChange('fronttech', e.target.value)}
                 variant="outlined"
                 InputProps={{
                   startAdornment: (
@@ -182,8 +206,8 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
               <TextField
                 fullWidth
                 label="Tecnologías Backend"
-                value={formData.backendTech}
-                onChange={(e) => handleInputChange('backendTech', e.target.value)}
+                value={formData.backtech}
+                onChange={(e) => handleInputChange('backtech', e.target.value)}
                 variant="outlined"
                 InputProps={{
                   startAdornment: (
@@ -232,10 +256,10 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
 
               <TextField
                 fullWidth
-                label="Número de Sprints"
+                label="Número de sprints"
                 type="number"
-                value={formData.sprints}
-                onChange={(e) => handleInputChange('sprints', e.target.value)}
+                value={formData.sprintsQuantity}
+                onChange={(e) => handleInputChange('sprintsQuantity', e.target.value)}
                 variant="outlined"
               />
             </Box>
@@ -280,6 +304,7 @@ export default function CreateProjectModal({ open, onClose }: CreateProjectModal
         <CustomButton
           variant="primary"
           onClick={handleCreateProject}
+          disabled={isSending}
           sx={{ margin: 0 }}
         >
           {tabValue === 0 ? 'Crear Proyecto' : 'Generar con IA'}

@@ -18,11 +18,12 @@ export class TasksController {
     return this.tasksService.create(dto, request);
   }
 
-  @Get()
+  @Get(':id')
   findAll(
+    @Param('id') id: string,
     @Request() request: AuthenticatedUserInterface
   ) {
-    return this.tasksService.findAll(request);
+    return this.tasksService.findAll(id, request);
   }
 
   @Get(':id')

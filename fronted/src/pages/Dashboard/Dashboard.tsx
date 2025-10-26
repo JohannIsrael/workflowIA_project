@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   Typography, 
   TextField,
-  Paper
+  Paper,
+  Grid,
+  CircularProgress,
+  Backdrop
 } from '@mui/material';
 import { 
   Send,
@@ -12,49 +15,58 @@ import {
 } from '@mui/icons-material';
 import ProjectCard from '@src/components/ProjectCard';
 import CustomButton from '@src/components/CustomButton';
+import { getProjectsAPI } from '@src/apis/projects';
+import { executeGeminiAction } from '@src/apis/gemini';
 
-interface RecentProject {
+interface Project {
   id: number;
-  title: string;
-  priority: 'Low' | 'Medium' | 'High';
+  name: string;
+  priority: string;
   endDate: string;
-  technologies: string[];
+  backtech: string;
+  fronttech: string;
+  cloudTech: string;
+  sprints: number;
 }
-
-const recentProjects: RecentProject[] = [
-  {
-    id: 1,
-    title: 'E-commerce Platform',
-    priority: 'High',
-    endDate: '2024-12-31',
-    technologies: ['React', 'Node.js']
-  },
-  {
-    id: 2,
-    title: 'Mobile Banking App',
-    priority: 'High',
-    endDate: '2024-11-15',
-    technologies: ['React Native', 'Express']
-  },
-  {
-    id: 3,
-    title: 'Learning Management System',
-    priority: 'Medium',
-    endDate: '2025-01-20',
-    technologies: ['Vue.js', 'Python']
-  }
-];
 
 export default function Dashboard() {
   const [prompt, setPrompt] = useState('');
   const [userName, setUserName] = useState('Johann');
   const navigate = useNavigate();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSendPrompt = () => {
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const data = await getProjectsAPI();
+      setProjects(data);
+    } catch (err) {
+      setError('Error fetching projects');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const handleSendPrompt = async () => {
     if (prompt.trim()) {
-      console.log('Sending prompt:', prompt);
-      // Here you would integrate with your AI service
-      setPrompt('');
+      setIsSending(true);
+      try {
+        await executeGeminiAction('create', prompt);
+        setPrompt('');
+        fetchProjects(); // Re-fetch projects after creating a new one
+      } catch (error) {
+        console.error('Error executing Gemini action:', error);
+        setError('Error creating project');
+      } finally {
+        setIsSending(false);
+      }
     }
   };
 
@@ -62,8 +74,10 @@ export default function Dashboard() {
     navigate('/proyectos');
   };
 
-  const handleProjectClick = (projectId: number) => {
-    navigate('/detalle-proyecto');
+  const handleProjectClick = (project: Project) => {
+    navigate(`/detalle-proyecto/${project.id}`, { 
+      state: { project } 
+    });
   };
 
   return (
@@ -73,6 +87,12 @@ export default function Dashboard() {
       backgroundColor: 'white',
       color: '#333'
     }}>
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={isSending}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 6 }}>
         <Typography 
@@ -85,7 +105,7 @@ export default function Dashboard() {
             fontSize: { xs: '1.5rem', md: '2.2rem' }
           }}
         >
-          ¡Hola {userName}!, ¿Qué proyecto quieres empezar hoy?
+         Hi {userName}!, What do you want to build?
         </Typography>
       </Box>
 
@@ -141,9 +161,8 @@ export default function Dashboard() {
             
             <CustomButton
               variant="primary"
-              endIcon={<Send />}
               onClick={handleSendPrompt}
-              disabled={!prompt.trim()}
+              disabled={!prompt.trim() || isSending}
               sx={{ 
                 margin: 0, 
                 color: 'white !important',
@@ -160,10 +179,9 @@ export default function Dashboard() {
       </Box>
 
       
-      
 
       {/* Recent Projects */}
-      <Box sx={{ maxWidth: '800px', mx: 'auto' }}>
+      <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -177,7 +195,7 @@ export default function Dashboard() {
               color: '#333' 
             }}
           >
-            Proyectos Recientes
+            Recent Projects
           </Typography>
           <CustomButton
             variant="outlined"
@@ -185,35 +203,42 @@ export default function Dashboard() {
             onClick={handleViewAllProjects}
             sx={{ margin: 0 }}
           >
-            Ver todos
+            See all
           </CustomButton>
         </Box>
 
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { 
-            xs: '1fr', 
-            sm: 'repeat(2, 1fr)', 
-            md: 'repeat(3, 1fr)' 
-          }, 
-          gap: 3 
-        }}>
-          {recentProjects.map((project) => (
-            <Box 
-              key={project.id} 
-              onClick={() => handleProjectClick(project.id)}
-              sx={{ cursor: 'pointer' }}
-            >
-              <ProjectCard
-                title={project.title}
-                priority={project.priority}
-                endDate={project.endDate}
-                technologies={project.technologies}
-              />
-            </Box>
-          ))}
-        </Box>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+            <Typography color="error">{error}</Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {projects.map((project) => (
+              <Grid item xs={12} sm={6} md={4} key={project.id}>
+                <Box 
+                  onClick={() => handleProjectClick(project)}
+                  sx={{ cursor: 'pointer' }}
+                >
+                  <ProjectCard
+                    name={project.name}
+                    priority={project.priority}
+                    endDate={project.endDate}
+                    backtech={project.backtech}
+                    fronttech={project.fronttech}
+                    cloudTech={project.cloudTech}
+                    sprints={project.sprints}
+                  />
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Box>
     </Box>
   );
 }
+

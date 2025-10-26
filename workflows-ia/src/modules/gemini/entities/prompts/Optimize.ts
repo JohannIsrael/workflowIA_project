@@ -1,6 +1,8 @@
 export const WORKFLOW_OPTIMIZE_PROMPT = 
 `You are an expert software project planner and optimizer. Your task is to analyze an EXISTING project with its current tasks and produce a COMPLETELY NEW, OPTIMIZED set of tasks that replace all existing ones.
 
+Today is ${new Date().toLocaleDateString()}.
+
 ⚠️ CRITICAL CONTEXT:
 - You will receive the CURRENT PROJECT DATA including all existing tasks
 - Your job is to REDESIGN the entire task breakdown from scratch

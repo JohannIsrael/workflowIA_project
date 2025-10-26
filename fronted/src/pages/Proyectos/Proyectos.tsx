@@ -1,63 +1,41 @@
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Typography, Grid, CircularProgress } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ProjectCard from '@src/components/ProjectCard';
 import CustomButton from '@src/components/CustomButton';
 import CreateProjectModal from '@src/components/CreateProjectModal';
+import { getProjectsAPI } from '@src/apis/projects';
+import { type Project } from './../../utils/interfaces/Project';
 
-// Sample project data
-const projects = [
-  {
-    id: 1,
-    title: 'E-commerce Platform',
-    priority: 'High' as const,
-    endDate: '2024-12-31',
-    technologies: ['React', 'Node.js']
-  },
-  {
-    id: 2,
-    title: 'Mobile Banking App',
-    priority: 'High' as const,
-    endDate: '2024-11-15',
-    technologies: ['React Native', 'Express', 'MongoDB']
-  },
-  {
-    id: 3,
-    title: 'Learning Management System',
-    priority: 'Medium' as const,
-    endDate: '2025-01-20',
-    technologies: ['Vue.js', 'Python', 'PostgreSQL']
-  },
-  {
-    id: 4,
-    title: 'Inventory Management',
-    priority: 'Low' as const,
-    endDate: '2025-02-28',
-    technologies: ['Angular', 'Java', 'MySQL']
-  },
-  {
-    id: 5,
-    title: 'Social Media Dashboard',
-    priority: 'Medium' as const,
-    endDate: '2024-10-30',
-    technologies: ['React', 'TypeScript', 'Firebase']
-  },
-  {
-    id: 6,
-    title: 'IoT Monitoring System',
-    priority: 'High' as const,
-    endDate: '2024-12-15',
-    technologies: ['React', 'Python', 'AWS']
-  }
-];
 
 export default function Proyectos() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleProjectClick = (projectId: number) => {
-    navigate('/detalle-proyecto');
+  const fetchProjects = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getProjectsAPI();
+      setProjects(data);
+    } catch (err) {
+      setError('Error fetching projects');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const handleProjectClick = (project: Project) => {
+    navigate(`/detalle-proyecto/${project.id}`, { 
+      state: { project } 
+    });
   };
 
   const handleOpenModal = () => {
@@ -67,11 +45,28 @@ export default function Proyectos() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#333' }}>
-          Mis Proyectos
+          My projects
         </Typography>
         <CustomButton
           variant="primary"
@@ -79,22 +74,25 @@ export default function Proyectos() {
           onClick={handleOpenModal}
           sx={{ margin: 0 }}
         >
-          Nuevo Proyecto
+          New Project
         </CustomButton>
       </Box>
 
       <Grid container spacing={3}>
         {projects.map((project) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={project.id}>
+          <Grid item xs={12} sm={6} md={4} key={project.id}>
             <Box 
-              onClick={() => handleProjectClick(project.id)}
+              onClick={() => handleProjectClick(project)}
               sx={{ cursor: 'pointer' }}
             >
               <ProjectCard
-                title={project.title}
+                name={project.name}
                 priority={project.priority}
                 endDate={project.endDate}
-                technologies={project.technologies}
+                backtech={project.backtech}
+                fronttech={project.fronttech}
+                cloudTech={project.cloudTech}
+                sprints={project.sprints}
               />
             </Box>
           </Grid>
@@ -104,6 +102,7 @@ export default function Proyectos() {
       <CreateProjectModal 
         open={isModalOpen} 
         onClose={handleCloseModal} 
+        onProjectCreated={fetchProjects}
       />
     </Box>
   );

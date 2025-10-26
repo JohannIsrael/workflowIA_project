@@ -25,10 +25,11 @@ export class TasksService {
     return task;
   }
 
-  async findAll(request: AuthenticatedUserInterface) {
+  async findAll(id: string,request: AuthenticatedUserInterface) {
     const auditLog = this.createAuditLog(request, 'GET_ALL_TASKS');
     await this.authServiceProxy.logAction(auditLog as AuditLogs);
     const tasks = await this.tasksRepository.find({
+      where: { project: { id } },
       relations: ['project']
     });
     return tasks;
