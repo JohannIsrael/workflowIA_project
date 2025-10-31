@@ -124,13 +124,13 @@ export default function Logs() {
           >
             Actualizar
           </CustomButton>
-          <CustomButton
+          {/* <CustomButton
             variant="primary"
             startIcon={<Download />}
             sx={{ margin: 0 }}
           >
             Exportar
-          </CustomButton>
+          </CustomButton> */}
         </Box>
       </Box>
 
