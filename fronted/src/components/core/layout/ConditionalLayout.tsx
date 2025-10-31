@@ -21,17 +21,17 @@ export default function ConditionalLayout({ children }: ConditionalLayoutProps) 
   const getPageTitle = (pathname: string) => {
     switch (pathname) {
       case '/dashboard':
-        return 'AI Console'
+        return 'ConsolaI IA'
       case '/proyectos':
-        return 'Projects'
+        return 'Proyectos'
       case '/logs':
         return 'System Logs'
       case '/profile':
-        return 'My profile'
+        return 'Mi perfil'
       case '/configuracion':
-        return 'Settings'
+        return 'Configuración'
       case '/':
-        return 'Detail Project'
+        return 'Detalle del Proyecto'
       default:
         return undefined
     }

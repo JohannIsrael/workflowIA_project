@@ -13,11 +13,13 @@ import { SpecPersisterProcessor } from './processors/spec-persister.processor';
 import { CreateProjectStrategy } from './strategies/create-project.strategy';
 import { PredictProjectStrategy } from './strategies/predict-project.strategy';
 import { OptimizeProjectStrategy } from './strategies/optimize-project.strategy';
-import { GeminiStrategyFactory } from './strategies/strategy.factory';  // 👈 NUEVO
+import { GeminiStrategyFactory } from './strategies/strategy.factory';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Projects, Tasks])
+    TypeOrmModule.forFeature([Projects, Tasks]),
+    AuthModule
   ],
   controllers: [GeminiController],
   providers: [

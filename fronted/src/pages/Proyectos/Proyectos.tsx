@@ -66,7 +66,7 @@ export default function Proyectos() {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#333' }}>
-          My projects
+          Mis Proyectos
         </Typography>
         <CustomButton
           variant="primary"
@@ -74,7 +74,7 @@ export default function Proyectos() {
           onClick={handleOpenModal}
           sx={{ margin: 0 }}
         >
-          New Project
+          Nuevo Proyecto
         </CustomButton>
       </Box>
 

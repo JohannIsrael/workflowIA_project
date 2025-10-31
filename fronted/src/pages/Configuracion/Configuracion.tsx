@@ -5,7 +5,6 @@ import {
   Card, 
   CardContent, 
   Grid,
-  Paper,
   Divider
 } from '@mui/material';
 import { 
@@ -60,63 +59,6 @@ export default function Configuracion() {
                   Ir a Mi Perfil
                 </CustomButton>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Información del Sistema */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
-                Información del Sistema
-              </Typography>
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                      v2.1.4
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Versión Actual
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
-                      256 MB
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Memoria Usada
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
-                      1.2 GB
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Almacenamiento
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#9c27b0' }}>
-                      Online
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Estado de Conexión
-                    </Typography>
-                  </Paper>
-                </Grid>
-              </Grid>
             </CardContent>
           </Card>
         </Grid>

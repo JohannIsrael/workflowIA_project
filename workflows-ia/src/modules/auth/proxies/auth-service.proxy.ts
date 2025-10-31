@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not, Like, In } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AuditLogs } from '../entities/AuditLogs.entity';
 import { User } from '../../user/entities/user.entity';
@@ -107,10 +107,10 @@ export class AuthServiceProxy implements IAuditLogsOperations{
     }
   }
 
-  private async createAuditLog(data: {
+  async createAuditLog(data: {
     action: string;
-    description: string;
-    details: string;
+    description: string | null;
+    details: string | null;
     user: User | null;
   }): Promise<void> {
     try {
@@ -133,6 +133,39 @@ export class AuthServiceProxy implements IAuditLogsOperations{
     return await this.auditLogsRepository.find({
       skip: (page - 1) * limit,
       take: limit,
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['user'],
+    });
+  }
+
+  async getSuccessAuditLogs(page: number, limit: number, userId: string) {
+    const allowedActions = [
+      'CREATE_PROJECT',
+      'UPDATE_PROJECT',
+      'DELETE_PROJECT',
+      'CREATE_TASK',
+      'UPDATE_TASK',
+      'DELETE_TASK',
+      'PREDICT_PROJECT',
+      'OPTIMIZE_PROJECT',
+    ];
+
+    return await this.auditLogsRepository.find({
+      where: {
+        description: Not(Like('%Error%')),
+        action: In(allowedActions),
+        user: {
+          id: userId,
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: ['user'],
     });
   }
 

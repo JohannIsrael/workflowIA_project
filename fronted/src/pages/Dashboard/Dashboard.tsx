@@ -10,13 +10,13 @@ import {
   Backdrop
 } from '@mui/material';
 import { 
-  Send,
   ArrowForward
 } from '@mui/icons-material';
 import ProjectCard from '@src/components/ProjectCard';
 import CustomButton from '@src/components/CustomButton';
 import { getProjectsAPI } from '@src/apis/projects';
 import { executeGeminiAction } from '@src/apis/gemini';
+import { decodeRefreshToken } from '@src/utils/tokenDecoder';
 
 interface Project {
   id: number;
@@ -31,12 +31,37 @@ interface Project {
 
 export default function Dashboard() {
   const [prompt, setPrompt] = useState('');
-  const [userName, setUserName] = useState('Johann');
+  const [userName, setUserName] = useState('Usuario');
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+
+  // Cargar nombre del usuario desde el token
+  useEffect(() => {
+    const loadUserName = () => {
+      try {
+        const tokenPayload = decodeRefreshToken();
+        if (tokenPayload) {
+          // Usar fullName si está disponible, sino name
+          const name = tokenPayload.fullName || tokenPayload.name || 'Usuario';
+          setUserName(name);
+        } else {
+          // Si no hay token, intentar obtener del localStorage
+          const savedUserStr = localStorage.getItem('user');
+          if (savedUserStr) {
+            const savedUser = JSON.parse(savedUserStr);
+            setUserName(savedUser.fullName || savedUser.name || 'Usuario');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user name:', error);
+      }
+    };
+
+    loadUserName();
+  }, []);
 
   const fetchProjects = async () => {
     try {
@@ -105,7 +130,7 @@ export default function Dashboard() {
             fontSize: { xs: '1.5rem', md: '2.2rem' }
           }}
         >
-         Hi {userName}!, What do you want to build?
+         ¡Hola {userName}! ¿Qué quieres construir?
         </Typography>
       </Box>
 
@@ -122,7 +147,7 @@ export default function Dashboard() {
             fullWidth
             multiline
             rows={3}
-            placeholder="Describe the idea you want to build..."
+            placeholder="Escribe lo que quieres construir..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             sx={{
@@ -195,7 +220,7 @@ export default function Dashboard() {
               color: '#333' 
             }}
           >
-            Recent Projects
+            Proyectos Recientes
           </Typography>
           <CustomButton
             variant="outlined"
@@ -203,7 +228,7 @@ export default function Dashboard() {
             onClick={handleViewAllProjects}
             sx={{ margin: 0 }}
           >
-            See all
+            Ver todos
           </CustomButton>
         </Box>
 

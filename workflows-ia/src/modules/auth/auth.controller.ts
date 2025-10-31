@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UnauthorizedException, Req, Query } from '@nestjs/common';
-import type { Request } from 'express';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UnauthorizedException, Req, Query, Request } from '@nestjs/common';
+import type { Request as ExpressRequest } from 'express';
 import { AuthServiceProxy } from './proxies/auth-service.proxy';
 import { LoginDto } from './dto/login-dto';
 import { Public } from './decorators/public.decorators';
 import { AuthService } from './auth.service';
+import type { AuthenticatedUserInterface } from './interfaces/authenticated-user-interface';
 
 @Controller('auth')
 export class AuthController {
@@ -27,7 +28,7 @@ export class AuthController {
   @Post('refresh')
   async refresh(@Req() req: Request) {
     // Extraer el refresh token del header Authorization
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers['authorization'];
     const refreshToken = authHeader?.replace('Bearer ', '');
     
     if (!refreshToken) {
@@ -46,5 +47,14 @@ export class AuthController {
   @Get('audit-logs')
   async getAuditLogs(@Query('page') page: number = 1, @Query('limit') limit: number = 10) {
     return this.authServiceProxy.getAllAuditLogs(page, limit);
+  }
+
+  @Get('audit-logs/success')
+  async getSuccessAuditLogs(
+    @Query('page') page: number = 1, 
+    @Query('limit') limit: number = 10,
+    @Request() request: AuthenticatedUserInterface
+  ) {
+    return this.authServiceProxy.getSuccessAuditLogs(page, limit, request.user.id);
   }
 }

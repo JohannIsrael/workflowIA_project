@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -6,52 +6,108 @@ import {
   CardContent, 
   Avatar, 
   TextField, 
-  Button,
-  Divider,
   Grid,
-  Paper
+  CircularProgress
 } from '@mui/material';
 import { 
   Person, 
   Email, 
-  Phone, 
-  LocationOn, 
-  Work, 
   CalendarToday,
   Edit,
   Save,
   Cancel
 } from '@mui/icons-material';
 import CustomButton from '@src/components/CustomButton';
+import { decodeRefreshToken } from '@src/utils/tokenDecoder';
 
 interface UserProfile {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  phone: string;
-  location: string;
-  position: string;
-  department: string;
   joinDate: string;
   avatar?: string;
+  fullName?: string;
+  lastLogin?: string;
 }
 
-const initialProfile: UserProfile = {
-  id: 1,
-  name: 'Johann',
-  email: 'johann@flowpilot.com',
-  phone: '+1 (555) 123-4567',
-  location: 'Bogotá, Colombia',
-  position: 'Desarrollador Full Stack',
-  department: 'Tecnología',
-  joinDate: '2024-01-15',
-  avatar: undefined
+const defaultProfile: UserProfile = {
+  id: '',
+  name: '',
+  email: '',
+  joinDate: '',
+  avatar: undefined,
+  fullName: '',
+  lastLogin: ''
 };
 
 export default function Profile() {
-  const [profile, setProfile] = useState<UserProfile>(initialProfile);
+  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedProfile, setEditedProfile] = useState<UserProfile>(initialProfile);
+  const [editedProfile, setEditedProfile] = useState<UserProfile>(defaultProfile);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Obtener datos del usuario desde el refreshToken al cargar el componente
+  useEffect(() => {
+    const loadUserProfile = () => {
+      try {
+        const tokenPayload = decodeRefreshToken();
+        
+        if (tokenPayload) {
+          // Obtener datos adicionales del localStorage si existen
+          const savedUserStr = localStorage.getItem('user');
+          const savedUser = savedUserStr ? JSON.parse(savedUserStr) : null;
+          
+          // Obtener campos personalizados guardados previamente
+          const savedFullName = localStorage.getItem('user_fullName');
+          
+          // Formatear fecha de creación (createdAt)
+          const formatDate = (dateString: string | undefined) => {
+            if (!dateString) return '';
+            try {
+              const date = new Date(dateString);
+              return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+            } catch {
+              return '';
+            }
+          };
+
+          const userProfile: UserProfile = {
+            id: tokenPayload.sub || '',
+            name: tokenPayload.name || savedUser?.name || '',
+            email: tokenPayload.email || savedUser?.email || '',
+            fullName: savedFullName || tokenPayload.fullName || savedUser?.fullName || '',
+            joinDate: formatDate(tokenPayload.createdAt),
+            lastLogin: tokenPayload.lastLogin || '',
+            avatar: undefined
+          };
+
+          setProfile(userProfile);
+          setEditedProfile(userProfile);
+        } else {
+          // Si no hay token, intentar obtener datos del localStorage
+          const savedUserStr = localStorage.getItem('user');
+          if (savedUserStr) {
+            const savedUser = JSON.parse(savedUserStr);
+            const userProfile: UserProfile = {
+              ...defaultProfile,
+              id: savedUser.id || '',
+              name: savedUser.name || '',
+              email: savedUser.email || '',
+              fullName: savedUser.fullName || ''
+            };
+            setProfile(userProfile);
+            setEditedProfile(userProfile);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserProfile();
+  }, []);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -61,6 +117,11 @@ export default function Profile() {
   const handleSave = () => {
     setProfile(editedProfile);
     setIsEditing(false);
+    
+    // Guardar campos personalizados en localStorage
+    if (editedProfile.fullName) {
+      localStorage.setItem('user_fullName', editedProfile.fullName);
+    }
   };
 
   const handleCancel = () => {
@@ -75,13 +136,25 @@ export default function Profile() {
     }));
   };
 
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Usar fullName si está disponible, sino name
+  const displayName = profile.fullName || profile.name;
+  const displayNameEditing = editedProfile.fullName || editedProfile.name;
+
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#333' }}>
           Mi Perfil
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        {/* <Box sx={{ display: 'flex', gap: 2 }}>
           {isEditing ? (
             <>
               <CustomButton
@@ -111,7 +184,7 @@ export default function Profile() {
               Editar Perfil
             </CustomButton>
           )}
-        </Box>
+        </Box> */}
       </Box>
 
       <Grid container spacing={3}>
@@ -132,14 +205,13 @@ export default function Profile() {
                 <Person sx={{ fontSize: '4rem' }} />
               </Avatar>
               <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 1 }}>
-                {isEditing ? editedProfile.name : profile.name}
+                {isEditing ? displayNameEditing : displayName}
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                {isEditing ? editedProfile.position : profile.position}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {isEditing ? editedProfile.department : profile.department}
-              </Typography>
+              {profile.lastLogin && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Último acceso: {new Date(profile.lastLogin).toLocaleString()}
+                </Typography>
+              )}
             </CardContent>
           </Card>
         </Grid>
@@ -156,13 +228,31 @@ export default function Profile() {
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
-                    label="Nombre Completo"
+                    label="Nombre"
                     value={isEditing ? editedProfile.name : profile.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
+                    disabled={true}
+                    InputProps={{
+                      startAdornment: <Person sx={{ mr: 1, color: '#666' }} />
+                    }}
+                    helperText="Nombre del token (no editable)"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Nombre Completo"
+                    value={isEditing ? (editedProfile.fullName || '') : (profile.fullName || '')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEditedProfile(prev => ({ ...prev, fullName: value }));
+                    }}
                     disabled={!isEditing}
                     InputProps={{
                       startAdornment: <Person sx={{ mr: 1, color: '#666' }} />
                     }}
+                    helperText="Puede editarse, pero se usa el valor del token por defecto"
                   />
                 </Grid>
                 
@@ -172,62 +262,11 @@ export default function Profile() {
                     label="Correo Electrónico"
                     value={isEditing ? editedProfile.email : profile.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    disabled={!isEditing}
+                    disabled={true}
                     InputProps={{
                       startAdornment: <Email sx={{ mr: 1, color: '#666' }} />
                     }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Teléfono"
-                    value={isEditing ? editedProfile.phone : profile.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    disabled={!isEditing}
-                    InputProps={{
-                      startAdornment: <Phone sx={{ mr: 1, color: '#666' }} />
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Ubicación"
-                    value={isEditing ? editedProfile.location : profile.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    disabled={!isEditing}
-                    InputProps={{
-                      startAdornment: <LocationOn sx={{ mr: 1, color: '#666' }} />
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Posición"
-                    value={isEditing ? editedProfile.position : profile.position}
-                    onChange={(e) => handleInputChange('position', e.target.value)}
-                    disabled={!isEditing}
-                    InputProps={{
-                      startAdornment: <Work sx={{ mr: 1, color: '#666' }} />
-                    }}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Departamento"
-                    value={isEditing ? editedProfile.department : profile.department}
-                    onChange={(e) => handleInputChange('department', e.target.value)}
-                    disabled={!isEditing}
-                    InputProps={{
-                      startAdornment: <Work sx={{ mr: 1, color: '#666' }} />
-                    }}
+                    helperText="Correo del token (no editable)"
                   />
                 </Grid>
                 
@@ -237,7 +276,7 @@ export default function Profile() {
                     label="Fecha de Ingreso"
                     value={isEditing ? editedProfile.joinDate : profile.joinDate}
                     onChange={(e) => handleInputChange('joinDate', e.target.value)}
-                    disabled={!isEditing}
+                    disabled={true}
                     type="date"
                     InputLabelProps={{
                       shrink: true,
@@ -245,64 +284,8 @@ export default function Profile() {
                     InputProps={{
                       startAdornment: <CalendarToday sx={{ mr: 1, color: '#666' }} />
                     }}
+                    helperText="Fecha de creación de la cuenta (no editable)"
                   />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Estadísticas */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3 }}>
-                Estadísticas del Usuario
-              </Typography>
-              
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                      12
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Completed Proyects
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
-                      8
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Active Proyects
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#ff9800' }}>
-                      156
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Tareas Completadas
-                    </Typography>
-                  </Paper>
-                </Grid>
-                
-                <Grid item xs={12} sm={6} md={3}>
-                  <Paper sx={{ p: 2, textAlign: 'center', backgroundColor: '#f8f9fa' }}>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#9c27b0' }}>
-                      95%
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Eficiencia Promedio
-                    </Typography>
-                  </Paper>
                 </Grid>
               </Grid>
             </CardContent>

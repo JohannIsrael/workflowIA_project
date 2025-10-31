@@ -21,10 +21,10 @@ export default function SidebarLayout({ children, center = false, title }: Sideb
   const location = useLocation()
   
   const menuItems = [
-    { text: 'AI Console', icon: <Psychology />, path: '/' },
-    { text: 'Projects', icon: <Folder />, path: '/proyectos' },
-    { text: 'Logs', icon: <Assignment />, path: '/logs' },
-    { text: 'Settings', icon: <Settings />, path: '/configuracion' },
+    { text: 'ConsolaI IA ', icon: <Psychology />, path: '/' },
+    { text: 'Proyectos', icon: <Folder />, path: '/proyectos' },
+    { text: 'Historial', icon: <Assignment />, path: '/logs' },
+    { text: 'Configuración', icon: <Settings />, path: '/configuracion' },
   ]
 
   const toggleCollapse = () => {
