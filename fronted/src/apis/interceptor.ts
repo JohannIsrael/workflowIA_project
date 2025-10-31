@@ -52,8 +52,11 @@ api.interceptors.response.use(
       return api(originalRequest);
 
     } catch (refreshError) {
+      // Limpiar todo el localStorage cuando falla el refresh token
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.clear();
       window.location.href = "/login";
       return Promise.reject(refreshError);
     }

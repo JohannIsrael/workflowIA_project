@@ -29,7 +29,14 @@ export default function Header({ title }: HeaderProps) {
   };
 
   const handleLogout = () => {
-    navigate('/login');
+    // Limpiar todo el localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    // Limpiar cualquier otro dato que pueda estar almacenado
+    localStorage.clear();
+    // Redirigir al login
+    navigate('/login', { replace: true });
   };
 
   const handleProfileClick = () => {

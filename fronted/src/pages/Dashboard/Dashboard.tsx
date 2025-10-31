@@ -10,7 +10,8 @@ import {
   Backdrop
 } from '@mui/material';
 import { 
-  ArrowForward
+  ArrowForward,
+  FolderOpen
 } from '@mui/icons-material';
 import ProjectCard from '@src/components/ProjectCard';
 import CustomButton from '@src/components/CustomButton';
@@ -66,10 +67,26 @@ export default function Dashboard() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
+      setError(null); // Limpiar errores previos
       const data = await getProjectsAPI();
-      setProjects(data);
-    } catch (err) {
-      setError('Error fetching projects');
+      // Asegurarse de que siempre sea un array
+      if (Array.isArray(data)) {
+        setProjects(data);
+      } else {
+        setProjects([]);
+      }
+    } catch (err: any) {
+      // Solo mostrar error si no es un error de "no encontrado" o si es un error de red real
+      // Si la respuesta es 404 o similar, tratar como array vacío
+      if (err?.response?.status === 404 || (err?.response?.status >= 400 && err?.response?.status < 500)) {
+        // Errores 4xx (excepto algunos específicos) pueden significar que no hay proyectos
+        setProjects([]);
+        setError(null);
+      } else {
+        // Solo mostrar error para errores de red o servidor (5xx)
+        console.error('Error fetching projects:', err);
+        setError('Error fetching projects');
+      }
     } finally {
       setLoading(false);
     }
@@ -236,9 +253,44 @@ export default function Dashboard() {
           <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
             <CircularProgress />
           </Box>
-        ) : error ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-            <Typography color="error">{error}</Typography>
+        ) : projects.length === 0 ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '200px',
+              p: 4
+            }}
+          >
+            <FolderOpen 
+              sx={{ 
+                fontSize: 64, 
+                color: '#ccc',
+                mb: 2
+              }} 
+            />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: '#999',
+                fontWeight: 500,
+                mb: 1
+              }}
+            >
+              No hay proyectos aún
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#bbb',
+                textAlign: 'center',
+                maxWidth: '400px'
+              }}
+            >
+              Comienza creando tu primer proyecto usando el formulario de arriba
+            </Typography>
           </Box>
         ) : (
           <Grid container spacing={3}>

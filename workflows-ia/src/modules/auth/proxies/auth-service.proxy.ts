@@ -171,7 +171,55 @@ export class AuthServiceProxy implements IAuditLogsOperations{
 
   // Funciones logger
   async logAction(data: AuditLogs): Promise<void> {
-    await this.auditLogsRepository.save(data);
+    try {
+      // Si hay un usuario, verificar que existe en la base de datos antes de guardar
+      let userToSave: User | undefined = undefined;
+      
+      if (data.user) {
+        // Obtener el ID del usuario (puede ser un objeto plano del token o una entidad User)
+        const userId = data.user.id || (data.user as any).id;
+        
+        if (userId) {
+          // Verificar si ya es una entidad User (tiene método de TypeORM)
+          if (data.user instanceof User || (data.user as any).constructor?.name === 'User') {
+            // Si ya es una entidad, verificar que existe antes de usar
+            const userExists = await this.userRepository.findOne({ 
+              where: { id: userId } 
+            });
+            if (userExists) {
+              userToSave = userExists;
+            } else {
+              console.warn(`User with id ${userId} not found in database, saving audit log without user reference`);
+            }
+          } else {
+            // Es un objeto plano del token, buscar en la BD
+            const userExists = await this.userRepository.findOne({ 
+              where: { id: userId } 
+            });
+            
+            if (userExists) {
+              userToSave = userExists;
+            } else {
+              // Si el usuario no existe, registramos el warning pero continuamos sin usuario
+              console.warn(`User with id ${userId} not found in database (token may be stale), saving audit log without user reference`);
+            }
+          }
+        }
+      }
+      
+      const auditLog = this.auditLogsRepository.create({
+        action: data.action,
+        description: data.description,
+        details: data.details,
+        createdAt: data.createdAt || new Date().toISOString(),
+        user: userToSave,
+      });
+      
+      await this.auditLogsRepository.save(auditLog);
+    } catch (error) {
+      // No lanzamos error para no interrumpir el flujo principal
+      console.error('Error creating audit log:', error);
+    }
   }
 
   async findAuditLog(id: string): Promise<AuditLogs> {
