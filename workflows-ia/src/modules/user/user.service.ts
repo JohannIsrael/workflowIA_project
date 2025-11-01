@@ -36,15 +36,6 @@ export class UserService implements OnModuleInit {
             lastLogin: null,
             token: ""
           },
-          {
-            name: "developer",
-            email: "developer@workflows-ia.com", 
-            fullName: "Developer User",
-            password: "dev123",
-            createdAt: new Date().toISOString(),
-            lastLogin: null,
-            token: ""
-          }
         ];
         
         // Crear usuarios
