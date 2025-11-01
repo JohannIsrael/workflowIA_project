@@ -4,12 +4,12 @@ import { getProjectTasksAPI } from '@src/apis/tasks';
 import { type Task } from './../../utils/interfaces/Tasks';
 import { type Project } from './../../utils/interfaces/Project';
 import CreateTaskModal from '@src/components/CreateTaskModal'
-import { AddCircleOutline, Speed, AutoAwesome, SaveAlt, CalendarMonth, Info } from '@mui/icons-material';
-import { Box, FormControl, InputLabel, Select, MenuItem, TextField, InputAdornment, CircularProgress, Backdrop } from '@mui/material';
-import { useParams, useLocation } from 'react-router-dom';
+import { AddCircleOutline, Speed, AutoAwesome, SaveAlt, CalendarMonth, Edit, Delete, Close } from '@mui/icons-material';
+import { Box, FormControl, InputLabel, Select, MenuItem, TextField, InputAdornment, CircularProgress, Backdrop, IconButton, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TaskCard from '@src/components/detailProject/TaskCard';
 import { executeGeminiAction } from '@src/apis/gemini';
-import { updateProjectAPI } from '@src/apis/projects';
+import { updateProjectAPI, deleteProjectAPI } from '@src/apis/projects';
 import { toastSuccess, toastError, toastWarning, toastInfo } from '@src/utils/toast';
 
 
@@ -20,6 +20,7 @@ export default function DetailProject() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { projectId } = useParams<{ projectId: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(location.state?.project || null);
   const [priority, setPriority] = useState(project?.priority || '1');
   const [fronttech, setFronttech] = useState(project?.fronttech || '');
@@ -28,6 +29,10 @@ export default function DetailProject() {
   const [endDate, setEndDate] = useState(project?.endDate || '');
   const [sprints, setSprints] = useState(project?.sprintsQuantity|| '' );
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempProjectName, setTempProjectName] = useState(project?.name || '');
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const formatDateForInput = (dateString: string) => {
     if (!dateString) return '';
@@ -92,6 +97,7 @@ export default function DetailProject() {
       setCloudTech(project.cloudTech || '');
       setEndDate(formatDateForInput(project.endDate || ''));
       setSprints(project.sprintsQuantity ? project.sprintsQuantity.toString() : '');
+      setTempProjectName(project.name || '');
     }
   }, [project]);
 
@@ -141,7 +147,7 @@ export default function DetailProject() {
     setIsLoading(true);
     try {
       const projectData = {
-        name: project.name,
+        name: tempProjectName,
         priority: priority,
         backtech: backtech,
         fronttech: fronttech,
@@ -152,12 +158,56 @@ export default function DetailProject() {
 
       await updateProjectAPI(projectId, projectData);
       toastInfo('El proyecto se actualizó correctamente.', 'Proyecto actualizado');
+      setIsEditingName(false);
       await fetchProjectData(); 
     } catch (error) {
       toastError('No se pudo actualizar el proyecto.', 'Error al actualizar');
       console.error('Error updating project:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditNameClick = () => {
+    setIsEditingName(true);
+    setTempProjectName(project?.name || '');
+  };
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false);
+    setTempProjectName(project?.name || '');
+  };
+
+  const handleSaveName = async () => {
+    if (!tempProjectName.trim()) {
+      toastError('El nombre del proyecto no puede estar vacío.', 'Error');
+      return;
+    }
+    await handleUpdateProject();
+  };
+
+  const handleDeleteClick = () => {
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!projectId) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteProjectAPI(projectId);
+      toastWarning('Se ha eliminado el proyecto correctamente.', 'Proyecto eliminado');
+      navigate('/proyectos');
+    } catch (error) {
+      toastError('No se pudo eliminar el proyecto.', 'Error al eliminar');
+      console.error('Error deleting project:', error);
+    } finally {
+      setIsDeleting(false);
+      setOpenDeleteDialog(false);
     }
   };
 
@@ -191,7 +241,56 @@ export default function DetailProject() {
       </Backdrop>
 
       <div className='headerSection'>
-        <h1 className="heroDetailProject">{project?.name || 'FlowPilot App'}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+          {isEditingName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+              <TextField
+                value={tempProjectName}
+                onChange={(e) => setTempProjectName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSaveName();
+                  } else if (e.key === 'Escape') {
+                    handleCancelEditName();
+                  }
+                }}
+                variant="outlined"
+                autoFocus
+                sx={{ flex: 1 }}
+                disabled={isLoading}
+              />
+              <IconButton 
+                onClick={handleSaveName} 
+                color="primary"
+                disabled={isLoading}
+                aria-label="guardar nombre"
+              >
+                <SaveAlt />
+              </IconButton>
+              <IconButton 
+                onClick={handleCancelEditName} 
+                color="default"
+                disabled={isLoading}
+                aria-label="cancelar edición"
+              >
+                <Close />
+              </IconButton>
+            </div>
+          ) : (
+            <>
+              <h1 className="heroDetailProject">{project?.name || 'FlowPilot App'}</h1>
+              <IconButton 
+                onClick={handleEditNameClick} 
+                color="primary"
+                disabled={isLoading}
+                aria-label="editar nombre del proyecto"
+                sx={{ ml: 1 }}
+              >
+                <Edit />
+              </IconButton>
+            </>
+          )}
+        </div>
         <div className='headerSection__buttons'>
           <button 
             className='predictTaskButton' 
@@ -286,6 +385,18 @@ export default function DetailProject() {
               <SaveAlt className='iconAdd'/>
               Actualizar proyecto
             </button>
+            <button 
+              className='addTaskButton' 
+              type="button"
+              onClick={handleDeleteClick}
+              disabled={isLoading}
+              style={{ backgroundColor: '#d32f2f', color: 'white' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c62828'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#d32f2f'}
+            >
+              <Delete className='iconAdd'/>
+              Eliminar proyecto
+            </button>
           </Box>
         </div>
         <div>
@@ -323,6 +434,37 @@ export default function DetailProject() {
           sprint: editingTask.sprint
         } : undefined}
       />
+
+      {/* Confirmation Dialog for Project Deletion */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={handleCloseDeleteDialog}
+        aria-labelledby="delete-project-dialog-title"
+        aria-describedby="delete-project-dialog-description"
+      >
+        <DialogTitle id="delete-project-dialog-title">
+          ¿Eliminar proyecto?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-project-dialog-description">
+            ¿Estás seguro de que deseas eliminar el proyecto "{project?.name}"? Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog} disabled={isDeleting}>
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            disabled={isDeleting}
+            autoFocus
+          >
+            {isDeleting ? 'Eliminando...' : 'Eliminar'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

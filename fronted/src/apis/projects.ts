@@ -40,3 +40,13 @@ export const updateProjectAPI = async (projectId: string, projectData: any) => {
     return response.data;        
 };
 
+export const deleteProjectAPI = async (projectId: string) => {
+    const accessToken = localStorage.getItem("accessToken");
+    const response = await interceptor.delete(`/projects/${projectId}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    });
+    return response.data;
+};
+

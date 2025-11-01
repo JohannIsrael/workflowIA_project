@@ -5,6 +5,7 @@ import { AuthServiceProxy } from '../auth/proxies/auth-service.proxy';
 import { AuthenticatedUserInterface } from '../auth/interfaces/authenticated-user-interface';
 import { AuditLogs } from '../auth/entities/AuditLogs.entity';
 import { Tasks } from '../gemini/entities/Tasks.entity';
+import { Projects } from '../gemini/entities/Projects.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -21,8 +22,17 @@ export class TasksService {
     const auditLog = this.createAuditLog(request, 'CREATE_TASK');
     await this.authServiceProxy.logAction(auditLog as AuditLogs);
 
-    const task = await this.tasksRepository.save(dto);
-    return task;
+    // Crear la instancia de Tasks y asignar la relación correctamente
+    const task = this.tasksRepository.create({
+      name: dto.name,
+      description: dto.description ?? null,
+      assignedTo: dto.assignedTo ?? null,
+      sprint: dto.sprint ?? null,
+      project: { id: dto.projectId } as Projects,  // Asignar la relación usando el ID
+    });
+
+    const savedTask = await this.tasksRepository.save(task);
+    return savedTask;
   }
 
   async findAll(id: string,request: AuthenticatedUserInterface) {
@@ -55,9 +65,22 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
     
+    // Preparar los datos de actualización
+    const updateData: Partial<Tasks> = {
+      name: dto.name ?? task.name,
+      description: dto.description ?? task.description,
+      assignedTo: dto.assignedTo ?? task.assignedTo,
+      sprint: dto.sprint ?? task.sprint,
+    };
+
+    // Si se envía projectId en el DTO, asignar la relación correctamente
+    if (dto.projectId) {
+      updateData.project = { id: dto.projectId } as Projects;
+    }
+    
     const taskUpdated = await this.tasksRepository.save({
       ...task,
-      ...dto,
+      ...updateData,
     });
 
     return taskUpdated;
