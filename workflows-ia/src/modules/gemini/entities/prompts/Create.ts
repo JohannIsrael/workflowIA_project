@@ -10,6 +10,7 @@ Today is ${new Date().toLocaleDateString()}.
 - All string values must be enclosed in double quotes.
 - The “Tasks” field must be a JSON array of task objects.
 - Each task object must include: id (integer), name (string), assignedTo (string), and sprint (integer).
+- The output of the content MUST BE returned in MEXICAN SPANISH.
 
 📘 JSON structure template:
 {
