@@ -4,12 +4,14 @@ import { getProjectTasksAPI } from '@src/apis/tasks';
 import { type Task } from './../../utils/interfaces/Tasks';
 import { type Project } from './../../utils/interfaces/Project';
 import CreateTaskModal from '@src/components/CreateTaskModal'
-import { AddCircleOutline, Speed, AutoAwesome, SaveAlt, CalendarMonth } from '@mui/icons-material';
+import { AddCircleOutline, Speed, AutoAwesome, SaveAlt, CalendarMonth, Info } from '@mui/icons-material';
 import { Box, FormControl, InputLabel, Select, MenuItem, TextField, InputAdornment, CircularProgress, Backdrop } from '@mui/material';
 import { useParams, useLocation } from 'react-router-dom';
 import TaskCard from '@src/components/detailProject/TaskCard';
 import { executeGeminiAction } from '@src/apis/gemini';
 import { updateProjectAPI } from '@src/apis/projects';
+import { toastSuccess, toastError, toastWarning, toastInfo } from '@src/utils/toast';
+
 
 
 export default function DetailProject() {
@@ -42,7 +44,6 @@ export default function DetailProject() {
   const formatDateForAPI = (dateString: string) => {
     if (!dateString) return '';
     
-    // Convertir de YYYY-MM-DD a DD/MM/YYYY
     const parts = dateString.split('-');
     if (parts.length === 3) {
       const [year, month, day] = parts;
@@ -52,13 +53,17 @@ export default function DetailProject() {
     return dateString;
   };
 
+  const onDeleteSuccess = () => {
+    toastWarning('Se ha eliminado la tarea correctamente.', 'Tarea eliminada');
+    fetchProjectData();
+  };
+
   const fetchProjectData = async () => {
     if (projectId) {
       try {
         const fetchedTasks = await getProjectTasksAPI(projectId);
         setTasks(fetchedTasks);
         
-        // Actualizar datos del proyecto desde la primera tarea (todas tienen el mismo project)
         if (fetchedTasks.length > 0 && fetchedTasks[0].project) {
           const projectData = fetchedTasks[0].project;
           setProject(projectData);
@@ -68,9 +73,13 @@ export default function DetailProject() {
           setCloudTech(projectData.cloudTech || '');
           setEndDate(formatDateForInput(projectData.endDate || ''));
           setSprints(projectData.sprintsQuantity ? projectData.sprintsQuantity.toString() : '');
+          toastSuccess('Se ha cargado el proyecto correctamente.', 'Proyecto cargado');
+
         }
       } catch (error) {
         console.error('Error fetching project data:', error);
+        toastError('No se pudo cargar el proyecto.', 'Error al cargar');
+
       }
     }
   };
@@ -90,14 +99,19 @@ export default function DetailProject() {
     fetchProjectData();
   }, [projectId]);
 
+  
+
   const handlePredictTasks = async () => {
     if (!project?.name) return;
     
     setIsLoading(true);
+    toastInfo('Prediecendo las tareas...', 'Prediecendo');
     try {
       await executeGeminiAction('predict', "", project.id.toString());
+      toastInfo('Se ha predecido las tareas correctamente.', 'Tareas predecidas');
       await fetchProjectData();
     } catch (error) {
+      toastError('No se pudo predecir las tareas.', 'Error al predecir');
       console.error('Error predicting tasks:', error);
     } finally {
       setIsLoading(false);
@@ -108,10 +122,13 @@ export default function DetailProject() {
     if (!project?.name) return;
     
     setIsLoading(true);
+    toastInfo('Optimizando las tareas...', 'Optimizando');
     try {
       await executeGeminiAction('optimize', "", project.id.toString());
+      toastInfo('Se ha optimizado las tareas correctamente.', 'Tareas optimizadas');
       await fetchProjectData();
     } catch (error) {
+      toastError('No se pudo optimizar las tareas.', 'Error al optimizar');
       console.error('Error optimizing tasks:', error);
     } finally {
       setIsLoading(false);
@@ -134,8 +151,10 @@ export default function DetailProject() {
       };
 
       await updateProjectAPI(projectId, projectData);
-      await fetchProjectData(); // Recargar datos después de actualizar
+      toastInfo('El proyecto se actualizó correctamente.', 'Proyecto actualizado');
+      await fetchProjectData(); 
     } catch (error) {
+      toastError('No se pudo actualizar el proyecto.', 'Error al actualizar');
       console.error('Error updating project:', error);
     } finally {
       setIsLoading(false);
@@ -148,6 +167,7 @@ export default function DetailProject() {
   };
 
   const handleTaskCreated = () => {
+    toastInfo('Se ha creado la tarea correctamente.', 'Tarea creada');
     fetchProjectData();
   };
 
@@ -283,7 +303,7 @@ export default function DetailProject() {
                 key={task.id} 
                 task={task} 
                 onEdit={handleEditTask}
-                onDelete={fetchProjectData} 
+                onDelete={onDeleteSuccess} 
               />
             ))}
           </section>
