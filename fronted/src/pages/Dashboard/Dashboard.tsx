@@ -17,6 +17,7 @@ import ProjectCard from '@src/components/ProjectCard';
 import CustomButton from '@src/components/CustomButton';
 import { getProjectsAPI } from '@src/apis/projects';
 import { executeGeminiAction } from '@src/apis/gemini';
+import { toastError, toastInfo, toastSuccess } from '@src/utils/toast';
 
 interface Project {
   id: number;
@@ -57,12 +58,16 @@ export default function Dashboard() {
   const handleSendPrompt = async () => {
     if (prompt.trim()) {
       setIsSending(true);
+      toastInfo('Creando proyecto...', 'Se ha enviado el prompt para la creación del proyecto')
+
       try {
         await executeGeminiAction('create', prompt);
         setPrompt('');
+        toastSuccess('Se ha creado el proyecto correctamente.', 'Proyecto creado');
         fetchProjects(); // Re-fetch projects after creating a new one
       } catch (error) {
         console.error('Error executing Gemini action:', error);
+        toastError('No se pudo crear el proyecto.', 'Error al crear');
         setError('Error creating project');
       } finally {
         setIsSending(false);

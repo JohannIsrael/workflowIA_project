@@ -21,6 +21,7 @@ import { CalendarMonth, Code, Language, Cloud } from '@mui/icons-material';
 import CustomButton from '@src/components/CustomButton';
 import { executeGeminiAction } from '@src/apis/gemini';
 import { createProjectAPI } from '@src/apis/projects';
+import { toastError, toastInfo } from '@src/utils/toast';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -81,6 +82,8 @@ export default function CreateProjectModal({ open, onClose, onProjectCreated }: 
 
   const handleCreateProject = async () => {
     setIsSending(true);
+    toastInfo('Creando proyecto...', 'Se ha enviado el prompt para la creación del proyecto')
+  
     try {
       if (tabValue === 0) {
         // Creación manual
@@ -97,6 +100,7 @@ export default function CreateProjectModal({ open, onClose, onProjectCreated }: 
       handleClose();
     } catch (error) {
       console.error('Error creating project:', error);
+      toastError('No se pudo crear el proyecto.', 'Error al crear');
     } finally {
       setIsSending(false);
     }

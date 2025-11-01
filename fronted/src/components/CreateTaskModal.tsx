@@ -18,6 +18,8 @@ import CustomButton from '@src/components/CustomButton';
 import { createTaskAPI, updateTaskAPI } from '@src/apis/tasks';
 import { useParams } from 'react-router-dom';
 import { type CreateTaskModalProps } from '@src/utils/interfaces/CreateTaskModalProps';
+import { toastInfo, toastError } from '@src/utils/toast';
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -118,6 +120,7 @@ export default function CreateTaskModal({
       }
       handleClose();
     } catch (error) {
+      toastError('No se pudo guardar la tarea. Inténtalo de nuevo.', 'Error');
       console.error('Error creating/updating task:', error);
     } finally {
       setIsSending(false);

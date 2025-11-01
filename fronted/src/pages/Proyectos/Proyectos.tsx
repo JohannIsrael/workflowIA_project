@@ -7,6 +7,7 @@ import CustomButton from '@src/components/CustomButton';
 import CreateProjectModal from '@src/components/CreateProjectModal';
 import { getProjectsAPI } from '@src/apis/projects';
 import { type Project } from './../../utils/interfaces/Project';
+import { toastSuccess } from '@src/utils/toast';
 
 
 export default function Proyectos() {
@@ -29,6 +30,11 @@ export default function Proyectos() {
   }, []);
 
   useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const onSuccessProjectCreated = useCallback(() => {
+    toastSuccess('Se ha creado el proyecto correctamente.', 'Proyecto creado');
     fetchProjects();
   }, [fetchProjects]);
 
@@ -102,7 +108,7 @@ export default function Proyectos() {
       <CreateProjectModal 
         open={isModalOpen} 
         onClose={handleCloseModal} 
-        onProjectCreated={fetchProjects}
+        onProjectCreated={onSuccessProjectCreated}
       />
     </Box>
   );
