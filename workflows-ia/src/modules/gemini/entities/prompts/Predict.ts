@@ -14,6 +14,8 @@ Today is ${new Date().toLocaleDateString()}.
 - All field names and structure must match exactly as shown below.
 - All string values must be enclosed in double quotes.
 - The "Tasks" field must contain ONLY the NEW tasks to be added (not existing ones).
+- The output of the content MUST BE returned in MEXICAN SPANISH.
+
 
 📘 JSON structure template:
 {
